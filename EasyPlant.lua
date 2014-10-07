@@ -217,10 +217,10 @@ function EasyPlant:OnMouseButtonDown()
 	--self.bagwindow:AddStyle("IgnoreMouse",true)
 	
 	local curtarget = GameLib.GetTargetUnit()
-	if(curtarget and curtarget:GetName()==Apollo.GetString(423296)) then
+	if curtarget and self:IsFertileGround(curtarget:GetName()) then
 		self.toplant = curtarget:GetId()
 	end
-	
+
 	if(self.toplant==0) then
 		local toplant = self:GetToPlantUnitId()
 		if(toplant>0) then
@@ -281,34 +281,36 @@ function EasyPlant:OnUpdateInventory()
 	end
 end
 
+function EasyPlant:IsFertileGround(strName)
+	-- 65683 old one
+	-- 423296 Fertile Ground
+	-- 108 Unknown
+	if (strName == Apollo.GetString(423296)) or (strName == Apollo.GetString(108)) then
+		return true
+	end
+	return false
+end
 
 
 function EasyPlant:OnUnitCreated(unit)
 	--Print("OnUnitCreated") --and 65683 old one
-	if((unit) and (unit:GetName()==Apollo.GetString(423296)) and (unit:GetType()=="Simple")  and (self.watching[unit:GetId()] == nil)) then
+	if ((unit) and (self:IsFertileGround(unit:GetName())) and (unit:GetType() == "Simple")  and (self.watching[unit:GetId()] == nil)) then
 		--Print("watching")
 		self.watching[unit:GetId()] = {}
 		self.watching[unit:GetId()]["unit"] = unit
 		
 	end
-
 end
+
 
 function EasyPlant:OnUnitDestroyed(unit)
-
 	if((unit) and (self.watching[unit:GetId()])) then
-
 		self.watching[unit:GetId()] = nil
-
-		
 	end
-
 end
-
 
 
 function EasyPlant:DistanceToUnit(unit)
-	
 	local posPlayer = GameLib.GetPlayerUnit():GetPosition()
 	if(posPlayer) then
 		local posTarget = unit:GetPosition()
