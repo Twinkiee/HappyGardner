@@ -8,7 +8,7 @@ require "Window"
 -----------------------------------------------------------------------------------------------
 -- EasyPlant Module Definition
 -----------------------------------------------------------------------------------------------
-local EasyPlant = {} 
+local EasyPlant = {}
 local eventsActive = false
 
 local fnSortSeedsFirst = function(itemLeft, itemRight)
@@ -102,7 +102,7 @@ function EasyPlant:OnDocLoaded()
 		self.blockwindow = self.wndMain:FindChild("BlockMouse")
 		
 		self.timer = ApolloTimer.Create(1.000, true, "OnTimer", self)
-		self.BlockTimer = ApolloTimer.Create(0.3,false,"OnBlockTimer",self) 
+		self.BlockTimer = ApolloTimer.Create(0.3,false,"OnBlockTimer",self)
 		
 	end
 	
@@ -117,7 +117,7 @@ end
 function EasyPlant:OnWindowManagementReady()
     Event_FireGenericEvent("WindowManagementAdd", {wnd = self.wndMain, strName = "EasyPlant"})
 	if(self.lastZone==0) then
-		self:OnSubZoneChanged(GameLib.GetCurrentZoneId())	
+		self:OnSubZoneChanged(GameLib.GetCurrentZoneId())
 	end
 end
 
@@ -140,7 +140,7 @@ end
 function EasyPlant:new(o)
     o = o or {}
     setmetatable(o, self)
-    self.__index = self 
+    self.__index = self
 
     -- initialize variables here
 
@@ -190,12 +190,12 @@ function EasyPlant:OnEp(override)
 	if(seedcount<1) then
 		self.wndMain:Close()
 		return
-	end	
+	end
 		
 	
 	
 	if (self.wndMain:IsVisible()==false) then
-		self.wndMain:Invoke() 
+		self.wndMain:Invoke()
 	end
 	
 	local bagwindow = self.wndMain:FindChild("MainBagWindow")
@@ -294,7 +294,7 @@ end
 
 function EasyPlant:OnUnitCreated(unit)
 	--Print("OnUnitCreated") --and 65683 old one
-	if ((unit) and (self:IsFertileGround(unit:GetName())) and (unit:GetType() == "Simple")  and (self.watching[unit:GetId()] == nil)) then
+	if ((unit) and (self:IsFertileGround(unit:GetName())) and (unit:GetType() == "HousingPlant")  and (self.watching[unit:GetId()] == nil)) then
 		--Print("watching")
 		self.watching[unit:GetId()] = {}
 		self.watching[unit:GetId()]["unit"] = unit
@@ -327,7 +327,7 @@ function EasyPlant:DistanceToUnit(unit)
 	else
 		return 5000
 	end
-end 
+end
 
 function EasyPlant:GetToPlantUnitId()
 	for i,curunit in pairs(self.watching) do
