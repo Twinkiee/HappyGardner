@@ -11,6 +11,11 @@ require "Window"
 local EasyPlant = {}
 local eventsActive = false
 
+local N_FERTILE_GROUND_STRING_ID = 423296
+local N_FERTILE_GROUND_UNKNOWN_STRING_ID = 108
+local N_FERTILE_GROUND_MAX_DISTANCE = 15
+local STR_FERTILE_GROUND_TYPE =     "HousingPlant"
+
 local fnSortSeedsFirst = function(itemLeft, itemRight)
 
     if itemLeft == itemRight then
@@ -283,7 +288,7 @@ function EasyPlant:IsFertileGround(strName)
     -- 65683 old one
     -- 423296 Fertile Ground
     -- 108 Unknown
-    if (strName == Apollo.GetString(423296)) or (strName == Apollo.GetString(108)) then
+    if (strName == Apollo.GetString(N_FERTILE_GROUND_STRING_ID)) or (strName == Apollo.GetString(N_FERTILE_GROUND_UNKNOWN_STRING_ID)) then
         return true
     end
     return false
@@ -292,7 +297,7 @@ end
 
 function EasyPlant:OnUnitCreated(unit)
     --Print("OnUnitCreated") --and 65683 old one
-    if ((unit) and (self:IsFertileGround(unit:GetName())) and (unit:GetType() == "HousingPlant") and (self.watching[unit:GetId()] == nil)) then
+    if ((unit) and (self:IsFertileGround(unit:GetName())) and (unit:GetType() == STR_FERTILE_GROUND_TYPE) and (self.watching[unit:GetId()] == nil)) then
         --Print("watching")
         self.watching[unit:GetId()] = {}
         self.watching[unit:GetId()]["unit"] = unit
@@ -331,7 +336,7 @@ function EasyPlant:GetToPlantUnitId()
         local distance = self:DistanceToUnit(curunit["unit"])
         local curtime = GameLib.GetGameTime()
         --Print (i)
-        if (distance < 30 and (curunit["blocktime"] == nil or curtime - curunit["blocktime"] > 1)) then
+        if (distance < N_FERTILE_GROUND_MAX_DISTANCE and (curunit["blocktime"] == nil or curtime - curunit["blocktime"] > 1)) then
             return i
         end
     end
