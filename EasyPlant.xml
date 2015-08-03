@@ -1,0 +1,26 @@
+<Forms>
+    <Form Class="Window" LAnchorPoint="0" LAnchorOffset="0" TAnchorPoint="0" TAnchorOffset="0" RAnchorPoint="1" RAnchorOffset="0" BAnchorPoint="0" BAnchorOffset="50" RelativeToClient="1" Font="Default" Text="" Template="Default" Name="BagItem" Border="0" Picture="0" SwallowMouseClicks="1" Moveable="0" Escapable="0" Overlapped="1" BGColor="white" TextColor="white" TooltipColor="" Tooltip="">
+        <Control Class="Window" LAnchorPoint="0" LAnchorOffset="1" TAnchorPoint="0" TAnchorOffset="2" RAnchorPoint="1" RAnchorOffset="0" BAnchorPoint="0" BAnchorOffset="22" RelativeToClient="1" Font="CRB_InterfaceMedium_O" Text="" Template="Default" Name="BagLabel" BGColor="white" TextColor="UI_AlphaPercent60" TextId="Inventory_BagLabelDefault" Visible="0" TooltipColor=""/>
+        <Control Class="BagWindow" LAnchorPoint="0" LAnchorOffset="0" TAnchorPoint="0" TAnchorOffset="0" RAnchorPoint="1" RAnchorOffset="0" BAnchorPoint="1" BAnchorOffset="0" RelativeToClient="1" Sprite="" Text="" Name="ItemBagWindow" BGColor="white" TextColor="white" Picture="1" SwallowMouseClicks="1" IgnoreTooltipDelay="1" NewQuestOverlaySprite="ClientSprites:sprItem_NewQuest" IgnoreMouse="1" NewControlDepth="1" Overlapped="1" Visible="0" TooltipColor="" HideInEditor="0" Tooltip="">
+            <Event Name="GenerateTooltip" Function="OnGenerateTooltip"/>
+            <Event Name="DragDropNothingCursor" Function="OnDragDropNothingCursor"/>
+            <Event Name="DragDropCancel" Function="OnBagDragDropCancel"/>
+        </Control>
+    </Form>
+    <Form Class="Window" LAnchorPoint="0" LAnchorOffset="0" TAnchorPoint="0" TAnchorOffset="0" RAnchorPoint="0" RAnchorOffset="38" BAnchorPoint="0" BAnchorOffset="38" RelativeToClient="1" Font="Default" Text="" Template="Default" Name="VirtualItem" Picture="1" SwallowMouseClicks="1" Overlapped="1" BGColor="white" TextColor="white" IgnoreMouse="1" Sprite="CRB_UIKitSprites:spr_Hologram" Tooltip="" TooltipType="OnCursor" IgnoreTooltipDelay="1" TooltipColor="">
+        <Control Class="Window" LAnchorPoint="0" LAnchorOffset="1" TAnchorPoint="0" TAnchorOffset="1" RAnchorPoint="1" RAnchorOffset="-1" BAnchorPoint="1" BAnchorOffset="-1" RelativeToClient="1" Font="Default" Text="" Template="Default" Name="VirtualItemDisplay" BGColor="white" TextColor="white" Picture="1" IgnoreMouse="1" IgnoreTooltipDelay="1" TooltipType="OnCursor" TooltipColor=""/>
+        <Control Class="Window" LAnchorPoint="0" LAnchorOffset="0" TAnchorPoint="0" TAnchorOffset="0" RAnchorPoint="1" RAnchorOffset="-2" BAnchorPoint="1" BAnchorOffset="-2" RelativeToClient="1" Font="Default" Text="" Template="Default" Name="VirtualItemCount" BGColor="white" TextColor="white" DT_BOTTOM="1" DT_RIGHT="1" TextId="" Tooltip="" TooltipColor=""/>
+    </Form>
+    <Form Class="Window" LAnchorPoint="0" LAnchorOffset="492" TAnchorPoint="0" TAnchorOffset="353" RAnchorPoint="0" RAnchorOffset="774" BAnchorPoint="0" BAnchorOffset="423" RelativeToClient="1" Font="Default" Text="" BGColor="UI_WindowBGDefault" TextColor="UI_WindowTextDefault" Template="Default" TooltipType="OnCursor" Name="EasyPlantForm" Border="1" Picture="1" SwallowMouseClicks="1" Moveable="1" Escapable="0" Overlapped="1" TooltipColor="" Tooltip="" Sprite="CRB_Basekit:kitBase_HoloBlue_InsetBorder_Thick" DT_CENTER="0" DT_VCENTER="0" IgnoreMouse="0">
+        <Control Class="BagWindow" LAnchorPoint="0" LAnchorOffset="6" TAnchorPoint="0" TAnchorOffset="17" RAnchorPoint="0" RAnchorOffset="737" BAnchorPoint="0" BAnchorOffset="215" RelativeToClient="1" Font="Default" Text="" BGColor="UI_WindowBGDefault" TextColor="UI_WindowTextDefault" Template="Default" TooltipType="OnCursor" Name="MainBagWindow" TooltipColor="" Tooltip="" IgnoreMouse="0">
+            <Event Name="GenerateTooltip" Function="OnGenerateTooltip"/>
+            <Event Name="MouseButtonDown" Function="OnMouseButtonDown"/>
+        </Control>
+        <Control Class="Window" LAnchorPoint="0" LAnchorOffset="-315" TAnchorPoint="0" TAnchorOffset="-217" RAnchorPoint="1" RAnchorOffset="253" BAnchorPoint="1" BAnchorOffset="279" RelativeToClient="1" Font="Default" Text="" BGColor="UI_WindowBGDefault" TextColor="UI_WindowTextDefault" Template="Default" TooltipType="OnCursor" Name="BlockMouse" TooltipColor="" Overlapped="0" Sizable="0" IgnoreMouse="0">
+            <Event Name="MouseButtonDown" Function="OnMouseBlockDown"/>
+        </Control>
+        <Control Class="Window" LAnchorPoint="0" LAnchorOffset="-20" TAnchorPoint="0" TAnchorOffset="-20" RAnchorPoint="0" RAnchorOffset="31" BAnchorPoint="0" BAnchorOffset="8" RelativeToClient="1" Font="Default" Text="" BGColor="UI_WindowBGDefault" TextColor="UI_WindowTextDefault" Template="Default" TooltipType="OnCursor" Name="Window" TooltipColor="" Picture="1" IgnoreMouse="0" Sprite="CRB_Raid:sprRaid_RedXClose_Centered" Overlapped="0" NotRelative="0" NoClip="1">
+            <Event Name="MouseButtonDown" Function="TempClose"/>
+        </Control>
+    </Form>
+</Forms>
