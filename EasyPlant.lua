@@ -13,6 +13,7 @@ local eventsActive = false
 local N_FERTILE_GROUND_STRING_ID = 423296
 local N_FERTILE_GROUND_UNKNOWN_STRING_ID = 108
 local N_FERTILE_GROUND_MAX_DISTANCE = 15
+local N_HOUSE_PLOT_ID = 1136
 local STR_FERTILE_GROUND_TYPE =     "HousingPlant"
 
 local fnSortSeedsFirst = function(itemLeft, itemRight)
@@ -122,14 +123,16 @@ function EasyPlant:OnDocLoaded()
     self.wndSeedBag:SetItemSortComparer(fnSortSeedsFirst)
     self.wndSeedBag:SetNewItemOverlaySprite("")
 
+    self.wndSeedBag:SetStyle("IgnoreMouse", false)
     self.timer = ApolloTimer.Create(1.000, true, "OnTimer", self)
     self.BlockTimer = ApolloTimer.Create(0.3, false, "OnBlockTimer", self)
-    self.BlockTimerStart = ApolloTimer.Create(0.1, false, "OnBlockTimer", self)
+    -- self.BlockTimerStart = ApolloTimer.Create(0.1, false, "OnBlockTimer", self)
   end
 end
 
 function EasyPlant:OnBlockTimer()
-  self.wndSeedBag:Enable(not self.wndSeedBag:IsEnabled())
+  -- self.wndSeedBag:Enable(not self.wndSeedBag:IsEnabled())
+  self.wndSeedBag:SetStyle("IgnoreMouse", false)
 end
 
 
@@ -244,7 +247,7 @@ function EasyPlant:OnMouseButtonDown()
   GameLib.SetTargetUnit(self.watching[self.toplant]["unit"])
   self.toplant = 0
 
-  self.BlockTimerStart:Start()
+  -- self.BlockTimerStart:Start()
   self.BlockTimer:Start()
 end
 
@@ -259,13 +262,13 @@ function EasyPlant:OnSubZoneChanged(idZone, pszZoneName)
     return
   end
 
-  if (idZone == 1136 and self.lastZone ~= 1136) then
+  if (idZone == N_HOUSE_PLOT_ID and self.lastZone ~= N_HOUSE_PLOT_ID) then
     if (self.eventsActive == false) then
       self:Events(true)
     end
     self.timer:Start()
 
-  elseif (idZone ~= 1136) then
+  elseif (idZone ~= N_HOUSE_PLOT_ID) then
 
     self.watching = {}
     self:Events(false)
