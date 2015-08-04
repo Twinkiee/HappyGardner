@@ -224,9 +224,11 @@ end
 
 function EasyPlant:OnMouseButtonDown()
 
+  --[[
   if (not self.wndSeedBag:IsEnabled()) then
     return
   end
+  ]]
 
   local unitTarget = GameLib.GetTargetUnit()
   if unitTarget and self:IsFertileGround(unitTarget:GetName()) then
