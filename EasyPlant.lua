@@ -13,8 +13,12 @@ local eventsActive = false
 local N_FERTILE_GROUND_STRING_ID = 423296
 local N_FERTILE_GROUND_UNKNOWN_STRING_ID = 108
 local N_FERTILE_GROUND_MAX_DISTANCE = 15
+local N_SEED_ITEM_TYPE = 213
 local N_HOUSE_PLOT_ID = 1136
-local STR_FERTILE_GROUND_TYPE =     "HousingPlant"
+local N_INVALID_DISTANCE = 5000
+local STR_FERTILE_GROUND_TYPE = "HousingPlant"
+local STR_FERTILE_GROUND_TABLE_UNIT = "unit"
+local STR_FERTILE_GROUND_TABLE_TIME = "blocktime"
 
 local fnSortSeedsFirst = function(itemLeft, itemRight)
 
@@ -32,8 +36,8 @@ local fnSortSeedsFirst = function(itemLeft, itemRight)
   local strLeftItemType = itemLeft:GetItemType()
   local strRightItemType = itemRight:GetItemType()
 
-  if strLeftItemType == 213 then
-    if strRightItemType == 213 then
+  if strLeftItemType == N_SEED_ITEM_TYPE then
+    if strRightItemType == N_SEED_ITEM_TYPE then
       if itemLeft:GetStackCount() <= itemRight:GetStackCount() then
         return -1
       else
@@ -42,25 +46,11 @@ local fnSortSeedsFirst = function(itemLeft, itemRight)
     else
       return -1
     end
-  elseif strRightItemType == 213 then
+  elseif strRightItemType == N_SEED_ITEM_TYPE then
     return 1
   end
 
   return 0
-  --[[
-  if strLeftItemType == 213 then
-      return -1
-  end
-  if strRightItemType == 213 and strLeftItemType ~= 213 then
-
-      return 1
-  end
-  if strLeftItemType ~= 213 and strRightItemType ~= 213 then
-      return -1
-  end
-
-  return 0
-  ]]
 end
 
 
@@ -88,8 +78,6 @@ function EasyPlant:OnLoad()
   Apollo.RegisterEventHandler("ChangeWorld", "OnChangeWorld", self)
   self:Events(true)
 
-
-
   self.xmlDoc = XmlDoc.CreateFromFile("EasyPlant.xml")
   self.xmlDoc:RegisterCallback("OnDocLoaded", self)
 end
@@ -112,10 +100,11 @@ function EasyPlant:OnDocLoaded()
     -- self.wndMain:SetAnchorOffsets((x / 2), (y / 2) - 45, (x / 2), (y / 2))
     -- if the xmlDoc is no longer needed, you should set it to nil
     -- self.xmlDoc = nil
-    self.lastZone = 0
+    self.nLastZoneId = 0
     self.unit = 0
     self.toplant = 0
     self.wndSeedBag = self.wndMain:FindChild("MainBagWindow")
+    self.unitPlayer = GameLib.GetPlayerUnit()
 
     Apollo.RegisterSlashCommand("ep", "OnEp", self)
 
@@ -124,13 +113,13 @@ function EasyPlant:OnDocLoaded()
     self.wndSeedBag:SetNewItemOverlaySprite("")
 
     self.wndSeedBag:SetStyle("IgnoreMouse", false)
-    self.timer = ApolloTimer.Create(1.000, true, "OnTimer", self)
-    self.BlockTimer = ApolloTimer.Create(0.3, false, "OnBlockTimer", self)
+    self.timerDisplaySeedBag = ApolloTimer.Create(1.000, true, "OnDisplaySeedBagTimer", self)
+    self.timerEnableSeedBag = ApolloTimer.Create(0.4, false, "OnEnableSeedBagTimer", self)
     -- self.BlockTimerStart = ApolloTimer.Create(0.1, false, "OnBlockTimer", self)
   end
 end
 
-function EasyPlant:OnBlockTimer()
+function EasyPlant:OnEnableSeedBagTimer()
   -- self.wndSeedBag:Enable(not self.wndSeedBag:IsEnabled())
   self.wndSeedBag:SetStyle("IgnoreMouse", false)
 end
@@ -138,7 +127,7 @@ end
 
 function EasyPlant:OnWindowManagementReady()
   Event_FireGenericEvent("WindowManagementAdd", { wnd = self.wndMain, strName = "EasyPlant" })
-  if (self.lastZone == 0) then
+  if (self.nLastZoneId == 0) then
     self:OnSubZoneChanged(GameLib.GetCurrentZoneId())
   end
 end
@@ -147,7 +136,7 @@ end
 
 function EasyPlant:OnEp2()
   --Print(tostring(self.eventsActive))
-  Print(self.lastZone)
+  Print(self.nLastZoneId)
   Print(tostring(self.eventsActive))
 end
 
@@ -188,17 +177,17 @@ function EasyPlant:OnEp(override)
     return
   end
 
-  local seedcount = 0
-  local InvItems = GameLib.GetPlayerUnit():GetInventoryItems()
-  for i, InvItem in ipairs(InvItems) do
-    if InvItem then
-      local item = InvItem.itemInBag
-      if (item:GetItemType() == 213) then
-        seedcount = seedcount + 1
+  local nSeedCount = 0
+  local tInventoryItems = self.unitPlayer:GetInventoryItems()
+  for i, itemInventory in ipairs(tInventoryItems) do
+    if itemInventory then
+      local item = itemInventory.itemInBag
+      if (item:GetItemType() == N_SEED_ITEM_TYPE) then
+        nSeedCount = nSeedCount + 1
       end
     end
   end
-  if (seedcount < 1) then
+  if (nSeedCount < 1) then
     self.wndMain:Close()
     return
   end
@@ -216,10 +205,10 @@ function EasyPlant:OnEp(override)
   -- bagwindow:SetAnchorOffsets(25, 25, seedcount * multi + multi, 45)
   local nLeft, nTop, nRight, nBottom = self.wndMain:GetAnchorOffsets()
   -- self.wndMain:SetAnchorOffsets((x/2)-((seedcount*multi+multi)/2) + 10,(y/2)-45 + 10,(x/2)+(seedcount*multi+multi)/2 + 10,(y/2) + 10)
-  self.wndMain:SetAnchorOffsets(nLeft, nTop, (nLeft) + (seedcount * multi + multi), nBottom)
+  self.wndMain:SetAnchorOffsets(nLeft, nTop, (nLeft) + (nSeedCount * multi + multi), nBottom)
 
   bagwindow:SetSquareSize(45, 45)
-  bagwindow:SetBoxesPerRow(seedcount)
+  bagwindow:SetBoxesPerRow(nSeedCount)
 end
 
 function EasyPlant:OnMouseButtonDown()
@@ -232,25 +221,24 @@ function EasyPlant:OnMouseButtonDown()
 
   local unitTarget = GameLib.GetTargetUnit()
   if unitTarget and self:IsFertileGround(unitTarget:GetName()) then
-    self.toplant = unitTarget:GetId()
+    self.nFertileGroundToPlantId = unitTarget:GetId()
   end
 
-  if (self.toplant == 0) then
+  if (self.nFertileGroundToPlantId == 0) then
 
-    local nSeedId = self:GetToPlantUnitId()
-    if (nSeedId > 0) then
-      self.toplant = nSeedId
+    local nFertileGroundId = self:GetToPlantUnitId()
+    if (nFertileGroundId > 0) then
+      self.nFertileGroundToPlantId = nFertileGroundId
     else
       return
     end
   end
-  --Print(self.toplant)
-  self.watching[self.toplant]["blocktime"] = GameLib.GetGameTime()
-  GameLib.SetTargetUnit(self.watching[self.toplant]["unit"])
-  self.toplant = 0
+  --Print(self.nFertileGroundToPlantId)
+  self.watching[self.nFertileGroundToPlantId][STR_FERTILE_GROUND_TABLE_TIME] = GameLib.GetGameTime()
+  GameLib.SetTargetUnit(self.watching[self.nFertileGroundToPlantId][STR_FERTILE_GROUND_TABLE_UNIT])
+  self.nFertileGroundToPlantId = 0
 
-  -- self.BlockTimerStart:Start()
-  self.BlockTimer:Start()
+  self.timerEnableSeedBag:Start()
 end
 
 function EasyPlant:OnChangeWorld()
@@ -259,72 +247,69 @@ function EasyPlant:OnChangeWorld()
   end
 end
 
-function EasyPlant:OnSubZoneChanged(idZone, pszZoneName)
-  if (idZone == 0) then
+function EasyPlant:OnSubZoneChanged(nZoneId, pszZoneName)
+  if (nZoneId == 0) then
     return
   end
 
-  if (idZone == N_HOUSE_PLOT_ID and self.lastZone ~= N_HOUSE_PLOT_ID) then
+  if (nZoneId == N_HOUSE_PLOT_ID and self.nLastZoneId ~= N_HOUSE_PLOT_ID) then
     if (self.eventsActive == false) then
       self:Events(true)
     end
-    self.timer:Start()
+    self.timerDisplaySeedBag:Start()
 
-  elseif (idZone ~= N_HOUSE_PLOT_ID) then
+  elseif (nZoneId ~= N_HOUSE_PLOT_ID) then
 
     self.watching = {}
     self:Events(false)
-    self.timer:Stop()
+    self.timerDisplaySeedBag:Stop()
   end
-  self.lastZone = idZone
+  self.nLastZoneId = nZoneId
 end
 
 
 function EasyPlant:OnUpdateInventory()
   --Print("updateinv")
-  if (self.toplant == 0) then
+  if (self.nFertileGroundToPlantId == 0) then
     local toplant = self:GetToPlantUnitId()
     if (toplant > 0) then
-      self.toplant = toplant
+      self.nFertileGroundToPlantId = toplant
     end
   end
 
-  if (self.toplant > 0) then
+  if (self.nFertileGroundToPlantId > 0) then
     --Print("execute")
     self:OnEp(true)
   end
 end
 
 function EasyPlant:IsFertileGround(strName)
-  -- 65683 old one
-  -- 423296 Fertile Ground
-  -- 108 Unknown
-  if (strName == Apollo.GetString(N_FERTILE_GROUND_STRING_ID)) or (strName == Apollo.GetString(N_FERTILE_GROUND_UNKNOWN_STRING_ID)) then
-    return true
-  end
-  return false
+
+  return strName == Apollo.GetString(N_FERTILE_GROUND_STRING_ID) or strName == Apollo.GetString(N_FERTILE_GROUND_UNKNOWN_STRING_ID)
 end
 
 
 function EasyPlant:OnUnitCreated(unit)
-  --Print("OnUnitCreated") --and 65683 old one
+
   if ((unit) and (self:IsFertileGround(unit:GetName())) and (unit:GetType() == STR_FERTILE_GROUND_TYPE) and (self.watching[unit:GetId()] == nil)) then
     --Print("watching")
     self.watching[unit:GetId()] = {}
-    self.watching[unit:GetId()]["unit"] = unit
+    self.watching[unit:GetId()][STR_FERTILE_GROUND_TABLE_UNIT] = unit
   end
 end
 
 
+--[[
 function EasyPlant:OnUnitDestroyed(unit)
   if ((unit) and (self.watching[unit:GetId()])) then
     self.watching[unit:GetId()] = nil
   end
 end
+]]
 
 
 function EasyPlant:DistanceToUnit(unit)
-  local posPlayer = GameLib.GetPlayerUnit():GetPosition()
+  local posPlayer = self.unitPlayer:GetPosition()
   if (posPlayer) then
     local posTarget = unit:GetPosition()
     if posTarget then
@@ -335,40 +320,32 @@ function EasyPlant:DistanceToUnit(unit)
 
       return math.sqrt(math.pow(nDeltaX, 2) + math.pow(nDeltaY, 2) + math.pow(nDeltaZ, 2))
     else
-      return 5000
+      return N_INVALID_DISTANCE
     end
   else
-    return 5000
-  end
-end
-
-function EasyPlant:CleanFertileGroundArray()
-  for i, curunit in pairs(self.watching) do
-
-    Print(curunit["unit"]:GetName())
-    if (not self:IsFertileGround(curunit["unit"]:GetName())) then
-      table.remove(self.watching, i)
-    end
+    return N_INVALID_DISTANCE
   end
 end
 
 function EasyPlant:GetToPlantUnitId()
+  local distance, curtime
+
   for i, curunit in pairs(self.watching) do
-    local distance = self:DistanceToUnit(curunit["unit"])
-    local curtime = GameLib.GetGameTime()
+    distance = self:DistanceToUnit(curunit[STR_FERTILE_GROUND_TABLE_UNIT])
+    curtime = GameLib.GetGameTime()
 
     --Print (i)
-    if (distance < N_FERTILE_GROUND_MAX_DISTANCE and (curunit["blocktime"] == nil or curtime - curunit["blocktime"] > 1) and self:IsFertileGround(curunit["unit"]:GetName())) then
+    if (distance < N_FERTILE_GROUND_MAX_DISTANCE and (curunit[STR_FERTILE_GROUND_TABLE_TIME] == nil or curtime - curunit[STR_FERTILE_GROUND_TABLE_TIME] > 1) and self:IsFertileGround(curunit[STR_FERTILE_GROUND_TABLE_UNIT]:GetName())) then
       return i
     end
   end
   return 0
 end
 
-function EasyPlant:OnTimer()
+function EasyPlant:OnDisplaySeedBagTimer()
   local toplant = self:GetToPlantUnitId()
   if (toplant > 0) then
-    self.toplant = toplant
+    self.nFertileGroundToPlantId = toplant
     self:OnEp(false)
   else
     self.wndMain:Close()
@@ -400,9 +377,9 @@ function EasyPlant:OnGenerateTooltip(wndControl, wndHandler, tType, item)
 end
 
 function EasyPlant:TempClose(wndHandler, wndControl, eMouseButton, nLastRelativeMouseX, nLastRelativeMouseY, bDoubleClick, bStopPropagation)
-    self.timer:Stop()
+    self.timerDisplaySeedBag:Stop()
     self:Events(false)
-    self.lastZone = 0
+    self.nLastZoneId = 0
     self.wndMain:Close()
 end
 
