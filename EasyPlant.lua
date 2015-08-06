@@ -12,7 +12,7 @@ local EasyPlant = {}
 local eventsActive = false
 local N_FERTILE_GROUND_STRING_ID = 423296
 local N_FERTILE_GROUND_UNKNOWN_STRING_ID = 108
-local N_FERTILE_GROUND_MAX_DISTANCE = 15
+local N_FERTILE_GROUND_MAX_DISTANCE = 14
 local N_SEED_ITEM_TYPE = 213
 local N_HOUSE_PLOT_ID = 1136
 local N_INVALID_DISTANCE = 5000
@@ -218,22 +218,22 @@ function EasyPlant:OnMouseButtonDown()
 
   local unitTarget = GameLib.GetTargetUnit()
   if unitTarget and self:IsFertileGround(unitTarget:GetName()) then
-    self.nFertileGroundToPlantId = unitTarget:GetId()
+    self.nToPlantFertileGroundId = unitTarget:GetId()
   end
 
-  if (self.nFertileGroundToPlantId == 0) then
+  if (self.nToPlantFertileGroundId == 0) then
 
     local nFertileGroundId = self:GetToPlantUnitId()
     if (nFertileGroundId > 0) then
-      self.nFertileGroundToPlantId = nFertileGroundId
+      self.nToPlantFertileGroundId = nFertileGroundId
     else
       return
     end
   end
-  --Print(self.nFertileGroundToPlantId)
-  self.watching[self.nFertileGroundToPlantId][STR_FERTILE_GROUND_TABLE_TIME] = GameLib.GetGameTime()
-  GameLib.SetTargetUnit(self.watching[self.nFertileGroundToPlantId][STR_FERTILE_GROUND_TABLE_UNIT])
-  self.nFertileGroundToPlantId = 0
+  --Print(self.nToPlantFertileGroundId)
+  self.watching[self.nToPlantFertileGroundId][STR_FERTILE_GROUND_TABLE_TIME] = GameLib.GetGameTime()
+  GameLib.SetTargetUnit(self.watching[self.nToPlantFertileGroundId][STR_FERTILE_GROUND_TABLE_UNIT])
+  self.nToPlantFertileGroundId = 0
 
   self.wndSeedBag:SetStyle("IgnoreMouse", true)
   self.timerEnableSeedBag:Start()
@@ -271,14 +271,14 @@ end
 
 function EasyPlant:OnUpdateInventory()
   --Print("updateinv")
-  if (self.nFertileGroundToPlantId == 0) then
-    local toplant = self:GetToPlantUnitId()
-    if (toplant > 0) then
-      self.nFertileGroundToPlantId = toplant
+  if (self.nToPlantFertileGroundId == 0) then
+    local nToPlantFertileGroundId = self:GetToPlantUnitId()
+    if (nToPlantFertileGroundId > 0) then
+      self.nToPlantFertileGroundId = nToPlantFertileGroundId
     end
   end
 
-  if (self.nFertileGroundToPlantId > 0) then
+  if (self.nToPlantFertileGroundId and self.nToPlantFertileGroundId > 0) then
     --Print("execute")
     self:OnEp(true)
   end
@@ -311,7 +311,11 @@ end
 
 function EasyPlant:DistanceToUnit(unit)
 
-  local posPlayer = GameLib.GetPlayerUnit():GetPosition()
+  local unitPlayer = GameLib.GetPlayerUnit()
+
+  if (not unitPlayer) then return N_INVALID_DISTANCE end
+
+  local posPlayer = unitPlayer:GetPosition()
 
   if (posPlayer) then
     local posTarget = unit:GetPosition()
@@ -347,12 +351,14 @@ end
 
 function EasyPlant:OnDisplaySeedBagTimer()
 
+  if (not GameLib.GetPlayerUnit()) then return end
+
   local toplant = self:GetToPlantUnitId()
 
   -- Print("OnDisplaySeedBagTimer: " .. toplant)
 
   if (toplant > 0) then
-    self.nFertileGroundToPlantId = toplant
+    self.nToPlantFertileGroundId = toplant
     self:OnEp(false)
   else
     self.wndMain:Close()
@@ -388,10 +394,6 @@ function EasyPlant:TempClose(wndHandler, wndControl, eMouseButton, nLastRelative
     self:Events(false)
     self.nLastZoneId = 0
     self.wndMain:Close()
-end
-
-function EasyPlant:OnMouseBlockDown(wndHandler, wndControl, eMouseButton, nLastRelativeMouseX, nLastRelativeMouseY, bDoubleClick, bStopPropagation)
-    --Print("todo")
 end
 
 -----------------------------------------------------------------------------------------------
