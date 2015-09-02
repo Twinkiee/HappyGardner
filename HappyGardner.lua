@@ -1,14 +1,14 @@
 -----------------------------------------------------------------------------------------------
--- Client Lua Script for EasyPlant
+-- Client Lua Script for HappyGardner
 -- Copyright (c) NCsoft. All rights reserved
 -----------------------------------------------------------------------------------------------
 
 require "Window"
 
 -----------------------------------------------------------------------------------------------
--- EasyPlant Module Definition
+-- HappyGardner Module Definition
 -----------------------------------------------------------------------------------------------
-local EasyPlant = {}
+local HappyGardner = {}
 local eventsActive = false
 local N_FERTILE_GROUND_STRING_ID = 423296
 local N_FERTILE_GROUND_UNKNOWN_STRING_ID = 108
@@ -56,7 +56,7 @@ local fnSortSeedsFirst = function(itemLeft, itemRight)
 end
 
 
-function EasyPlant:Events(activate)
+function HappyGardner:Events(activate)
   if (activate == true) then
     Apollo.RegisterEventHandler("UnitCreated", "OnUnitCreated", self)
     Apollo.RegisterEventHandler("UpdateInventory", "OnUpdateInventory", self)
@@ -68,7 +68,7 @@ function EasyPlant:Events(activate)
   end
 end
 
-function EasyPlant:OnLoad()
+function HappyGardner:OnLoad()
 
   self.watching = {}
   self.arPreloadUnits = {}
@@ -78,17 +78,17 @@ function EasyPlant:OnLoad()
   Apollo.RegisterEventHandler("ChangeWorld", "OnChangeWorld", self)
   self:Events(true)
 
-  self.xmlDoc = XmlDoc.CreateFromFile("EasyPlant.xml")
+  self.xmlDoc = XmlDoc.CreateFromFile("HappyGardner.xml")
   self.xmlDoc:RegisterCallback("OnDocLoaded", self)
 end
 
 -----------------------------------------------------------------------------------------------
--- EasyPlant OnDocLoaded
+-- HappyGardner OnDocLoaded
 -----------------------------------------------------------------------------------------------
-function EasyPlant:OnDocLoaded()
+function HappyGardner:OnDocLoaded()
 
   if self.xmlDoc ~= nil and self.xmlDoc:IsLoaded() then
-    self.wndMain = Apollo.LoadForm(self.xmlDoc, "EasyPlantForm", nil, self)
+    self.wndMain = Apollo.LoadForm(self.xmlDoc, "HappyGardnerForm", nil, self)
     if self.wndMain == nil then
       Apollo.AddAddonErrorText(self, "Could not load the main window for some reason.")
       return
@@ -119,14 +119,14 @@ function EasyPlant:OnDocLoaded()
   end
 end
 
-function EasyPlant:OnEnableSeedBagTimer()
+function HappyGardner:OnEnableSeedBagTimer()
   -- self.wndSeedBag:Enable(not self.wndSeedBag:IsEnabled())
   self.wndSeedBag:SetStyle("IgnoreMouse", false)
 end
 
 
-function EasyPlant:OnWindowManagementReady()
-  Event_FireGenericEvent("WindowManagementAdd", { wnd = self.wndMain, strName = "EasyPlant" })
+function HappyGardner:OnWindowManagementReady()
+  Event_FireGenericEvent("WindowManagementAdd", { wnd = self.wndMain, strName = "HappyGardner" })
   if (self.nLastZoneId == 0) then
     self:OnSubZoneChanged(GameLib.GetCurrentZoneId())
   end
@@ -134,7 +134,7 @@ end
 
 
 
-function EasyPlant:OnEp2()
+function HappyGardner:OnEp2()
   --Print(tostring(self.eventsActive))
   Print(self.nLastZoneId)
   Print(tostring(self.eventsActive))
@@ -148,7 +148,7 @@ end
 -----------------------------------------------------------------------------------------------
 -- Initialization
 -----------------------------------------------------------------------------------------------
-function EasyPlant:new(o)
+function HappyGardner:new(o)
   o = o or {}
   setmetatable(o, self)
   self.__index = self
@@ -158,7 +158,7 @@ function EasyPlant:new(o)
   return o
 end
 
-function EasyPlant:Init()
+function HappyGardner:Init()
   local bHasConfigureFunction = false
   local strConfigureButtonText = ""
   local tDependencies = {-- "UnitOrPackageName",
@@ -169,9 +169,9 @@ end
 
 
 -----------------------------------------------------------------------------------------------
--- EasyPlant OnLoad
+-- HappyGardner OnLoad
 -----------------------------------------------------------------------------------------------
-function EasyPlant:OnEp(override)
+function HappyGardner:OnEp(override)
 
   if (self.wndMain:IsVisible() and override == false) then
     return
@@ -208,7 +208,7 @@ function EasyPlant:OnEp(override)
   bagwindow:SetBoxesPerRow(nSeedCount)
 end
 
-function EasyPlant:OnMouseButtonDown()
+function HappyGardner:OnMouseButtonDown()
 
   --[[
   if (not self.wndSeedBag:IsEnabled()) then
@@ -239,13 +239,13 @@ function EasyPlant:OnMouseButtonDown()
   self.timerEnableSeedBag:Start()
 end
 
-function EasyPlant:OnChangeWorld()
+function HappyGardner:OnChangeWorld()
   if (self.eventsActive == false) then
     self:Events(true)
   end
 end
 
-function EasyPlant:OnSubZoneChanged(nZoneId, pszZoneName)
+function HappyGardner:OnSubZoneChanged(nZoneId, pszZoneName)
 
   Print("nZoneId: " .. tostring(nZoneId) .. "; self.nLastZoneId: " .. self.nLastZoneId)
 
@@ -269,7 +269,7 @@ function EasyPlant:OnSubZoneChanged(nZoneId, pszZoneName)
 end
 
 
-function EasyPlant:OnUpdateInventory()
+function HappyGardner:OnUpdateInventory()
   --Print("updateinv")
   if (self.nToPlantFertileGroundId == 0) then
     local nToPlantFertileGroundId = self:GetToPlantUnitId()
@@ -284,13 +284,13 @@ function EasyPlant:OnUpdateInventory()
   end
 end
 
-function EasyPlant:IsFertileGround(strName)
+function HappyGardner:IsFertileGround(strName)
 
   return strName == Apollo.GetString(N_FERTILE_GROUND_STRING_ID) or strName == Apollo.GetString(N_FERTILE_GROUND_UNKNOWN_STRING_ID)
 end
 
 
-function EasyPlant:OnUnitCreated(unit)
+function HappyGardner:OnUnitCreated(unit)
 
   if ((unit) and (self:IsFertileGround(unit:GetName())) and (unit:GetType() == STR_FERTILE_GROUND_TYPE) and (self.watching[unit:GetId()] == nil)) then
     --Print("watching")
@@ -301,7 +301,7 @@ end
 
 
 --[[
-function EasyPlant:OnUnitDestroyed(unit)
+function HappyGardner:OnUnitDestroyed(unit)
   if ((unit) and (self.watching[unit:GetId()])) then
     self.watching[unit:GetId()] = nil
   end
@@ -309,7 +309,7 @@ end
 ]]
 
 
-function EasyPlant:DistanceToUnit(unit)
+function HappyGardner:DistanceToUnit(unit)
 
   local unitPlayer = GameLib.GetPlayerUnit()
 
@@ -334,7 +334,7 @@ function EasyPlant:DistanceToUnit(unit)
   end
 end
 
-function EasyPlant:GetToPlantUnitId()
+function HappyGardner:GetToPlantUnitId()
   local distance, curtime
 
   for i, curunit in pairs(self.watching) do
@@ -349,7 +349,7 @@ function EasyPlant:GetToPlantUnitId()
   return 0
 end
 
-function EasyPlant:OnDisplaySeedBagTimer()
+function HappyGardner:OnDisplaySeedBagTimer()
 
   if (not GameLib.GetPlayerUnit()) then return end
 
@@ -369,16 +369,16 @@ end
 
 
 -----------------------------------------------------------------------------------------------
--- EasyPlant Functions
+-- HappyGardner Functions
 -----------------------------------------------------------------------------------------------
 -- Define general functions here
 
 
 -----------------------------------------------------------------------------------------------
--- EasyPlantForm Functions
+-- HappyGardnerForm Functions
 -----------------------------------------------------------------------------------------------
 -- when the OK button is clicked
-function EasyPlant:OnGenerateTooltip(wndControl, wndHandler, tType, item)
+function HappyGardner:OnGenerateTooltip(wndControl, wndHandler, tType, item)
 
   if wndControl ~= wndHandler then return end
     wndControl:SetTooltipDoc(nil)
@@ -389,7 +389,7 @@ function EasyPlant:OnGenerateTooltip(wndControl, wndHandler, tType, item)
     end
 end
 
-function EasyPlant:TempClose(wndHandler, wndControl, eMouseButton, nLastRelativeMouseX, nLastRelativeMouseY, bDoubleClick, bStopPropagation)
+function HappyGardner:TempClose(wndHandler, wndControl, eMouseButton, nLastRelativeMouseX, nLastRelativeMouseY, bDoubleClick, bStopPropagation)
     self.timerDisplaySeedBag:Stop()
     self:Events(false)
     self.nLastZoneId = 0
@@ -397,7 +397,7 @@ function EasyPlant:TempClose(wndHandler, wndControl, eMouseButton, nLastRelative
 end
 
 -----------------------------------------------------------------------------------------------
--- EasyPlant Instance
+-- HappyGardner Instance
 -----------------------------------------------------------------------------------------------
-local EasyPlantInst = EasyPlant:new()
-EasyPlantInst:Init()
+local HappyGardnerInst = HappyGardner:new()
+HappyGardnerInst:Init()
