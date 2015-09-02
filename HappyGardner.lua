@@ -1,14 +1,14 @@
 -----------------------------------------------------------------------------------------------
--- Client Lua Script for EasyPlant
+-- Client Lua Script for HappyGardner
 -- Copyright (c) NCsoft. All rights reserved
 -----------------------------------------------------------------------------------------------
 
 require "Window"
 
 -----------------------------------------------------------------------------------------------
--- EasyPlant Module Definition
+-- HappyGardner Module Definition
 -----------------------------------------------------------------------------------------------
-local EasyPlant = {}
+local HappyGardner = {}
 local eventsActive = false
 local N_FERTILE_GROUND_STRING_ID = 423296
 local N_FERTILE_GROUND_UNKNOWN_STRING_ID = 108
@@ -60,7 +60,7 @@ function EasyPlant:CloseSeedBagWindow()
   self.nToPlantFertileGroundId = 0
 end
 
-function EasyPlant:ToggleEvents(activate)
+function HappyGardner:ToggleEventHandlers(activate)
   if (activate == true) then
     Apollo.RegisterEventHandler("UnitCreated", "OnUnitCreated", self)
     Apollo.RegisterEventHandler("UpdateInventory", "OnUpdateInventory", self)
@@ -72,26 +72,26 @@ function EasyPlant:ToggleEvents(activate)
   end
 end
 
-function EasyPlant:OnLoad()
+function HappyGardner:OnLoad()
 
   self.tExistingFertileGrounds = {}
   self.arPreloadUnits = {}
 
   Apollo.RegisterEventHandler("SubZoneChanged", "OnSubZoneChanged", self)
   Apollo.RegisterEventHandler("ChangeWorld", "OnChangeWorld", self)
-  self:ToggleEvents(true)
+  self:ToggleEventHandlers(true)
 
-  self.xmlDoc = XmlDoc.CreateFromFile("EasyPlant.xml")
+  self.xmlDoc = XmlDoc.CreateFromFile("HappyGardner.xml")
   self.xmlDoc:RegisterCallback("OnDocLoaded", self)
 end
 
 -----------------------------------------------------------------------------------------------
--- EasyPlant OnDocLoaded
+-- HappyGardner OnDocLoaded
 -----------------------------------------------------------------------------------------------
-function EasyPlant:OnDocLoaded()
+function HappyGardner:OnDocLoaded()
 
   if self.xmlDoc ~= nil and self.xmlDoc:IsLoaded() then
-    self.wndMain = Apollo.LoadForm(self.xmlDoc, "EasyPlantForm", nil, self)
+    self.wndMain = Apollo.LoadForm(self.xmlDoc, "HappyGardnerForm", nil, self)
     if self.wndMain == nil then
       Apollo.AddAddonErrorText(self, "Could not load the main window for some reason.")
       return
@@ -105,8 +105,7 @@ function EasyPlant:OnDocLoaded()
     self.wndSeedBag = self.wndMain:FindChild("MainBagWindow")
     self.wndSeedBag:SetSquareSize(N_BAG_SQUARE_SIZE, N_BAG_SQUARE_SIZE)
 
-    Apollo.RegisterSlashCommand("hg", "OnShowHappyGardener", self)
-    Apollo.RegisterSlashCommand("ep2", "OnEp2", self)
+    Apollo.RegisterSlashCommand("hg", "OnHappyGardner", self)
 
     self.wndSeedBag:SetSort(true)
     self.wndSeedBag:SetItemSortComparer(fnSortSeedsFirst)
@@ -118,23 +117,16 @@ function EasyPlant:OnDocLoaded()
   end
 end
 
-function EasyPlant:OnEnableSeedBagTimer()
+function HappyGardner:OnEnableSeedBagTimer()
   self.wndSeedBag:Enable(not self.wndSeedBag:IsEnabled())
   -- self.wndSeedBag:SetStyle("IgnoreMouse", false)
 end
 
-function EasyPlant:OnWindowManagementReady()
-  Event_FireGenericEvent("WindowManagementAdd", { wnd = self.wndMain, strName = "EasyPlant" })
+function HappyGardner:OnWindowManagementReady()
+  Event_FireGenericEvent("WindowManagementAdd", { wnd = self.wndMain, strName = "HappyGardner" })
   if (self.nLastZoneId == 0) then
     self:OnSubZoneChanged(GameLib.GetCurrentZoneId())
   end
-end
-
-function EasyPlant:OnEp2()
-  --Print(tostring(self.eventsActive))
-  Print(self.nLastZoneId)
-  Print(tostring(self.eventsActive))
-  Print(tostring(self.nToPlantFertileGroundId))
 end
 
 -----------------------------------------------------------------------------------------------
@@ -145,7 +137,7 @@ end
 -----------------------------------------------------------------------------------------------
 -- Initialization
 -----------------------------------------------------------------------------------------------
-function EasyPlant:new(o)
+function HappyGardner:new(o)
   o = o or {}
   setmetatable(o, self)
   self.__index = self
@@ -155,7 +147,7 @@ function EasyPlant:new(o)
   return o
 end
 
-function EasyPlant:Init()
+function HappyGardner:Init()
   local bHasConfigureFunction = false
   local strConfigureButtonText = ""
   local tDependencies = {-- "UnitOrPackageName",
@@ -165,18 +157,17 @@ function EasyPlant:Init()
 end
 
 -----------------------------------------------------------------------------------------------
--- EasyPlant OnLoad
+-- HappyGardner OnLoad
 -----------------------------------------------------------------------------------------------
-function EasyPlant:OnShowHappyGardener(override)
+function HappyGardner:OnHappyGardner(bForceUpdate)
 
-  -- Print("OnShowHappyGardener")
-  if (self.wndMain:IsVisible() and override == false) then
+  if (self.wndMain:IsVisible() and not bForceUpdate) then
     return
   end
 
   local nSeedCount = 0
   local tInventoryItems = GameLib.GetPlayerUnit():GetInventoryItems()
-  for i, itemInventory in ipairs(tInventoryItems) do
+  for _, itemInventory in ipairs(tInventoryItems) do
     if itemInventory then
       local item = itemInventory.itemInBag
       if (item:GetItemType() == N_SEED_ITEM_TYPE) then
@@ -197,13 +188,15 @@ function EasyPlant:OnShowHappyGardener(override)
     self.timerDisplaySeedBag:Start()
   end
 
-  local nLeft, nTop, nRight, nBottom = self.wndMain:GetAnchorOffsets()
+  local wndBag = self.wndMain:FindChild("MainBagWindow")
+
+  local nLeft, nTop, _, nBottom = self.wndMain:GetAnchorOffsets()
   self.wndMain:SetAnchorOffsets(nLeft, nTop, (nLeft) + (nSeedCount * N_BAG_WINDOWS_SQUARE_SIZE + N_BAG_WINDOWS_SQUARE_SIZE), nBottom)
 
-  self.wndSeedBag:SetBoxesPerRow(nSeedCount)
+  wndBag:SetBoxesPerRow(nSeedCount)
 end
 
-function EasyPlant:OnMouseButtonDown()
+function HappyGardner:OnMouseButtonDown()
 
   if (not self.wndSeedBag:IsEnabled()) then
     return
@@ -211,33 +204,33 @@ function EasyPlant:OnMouseButtonDown()
 
   local unitTarget = GameLib.GetTargetUnit()
   if unitTarget and self:IsFertileGround(unitTarget:GetName()) then
-    self.nToPlantFertileGroundId = unitTarget:GetId()
+    self.nValidFertileGroundId = unitTarget:GetId()
   end
 
-  if (self.nToPlantFertileGroundId == 0) then
+  if (self.nValidFertileGroundId == 0) then
 
-    local nFertileGroundId = self:GetToPlantUnitId()
+    local nFertileGroundId = self:GetValidFertileGroundUnitId()
     if (nFertileGroundId > 0) then
-      self.nToPlantFertileGroundId = nFertileGroundId
+      self.nValidFertileGroundId = nFertileGroundId
     else
       return
     end
   end
-
-  self.tExistingFertileGrounds[self.nToPlantFertileGroundId][STR_FERTILE_GROUND_TABLE_TIME] = GameLib.GetGameTime()
-  GameLib.SetTargetUnit(self.tExistingFertileGrounds[self.nToPlantFertileGroundId][STR_FERTILE_GROUND_TABLE_UNIT])
-  self.nToPlantFertileGroundId = 0
+  --Print(self.nValidFertileGroundId)
+  self.tKnownFertileGround[self.nValidFertileGroundId][STR_FERTILE_GROUND_TABLE_TIME] = GameLib.GetGameTime()
+  GameLib.SetTargetUnit(self.tKnownFertileGround[self.nValidFertileGroundId][STR_FERTILE_GROUND_TABLE_UNIT])
+  self.nValidFertileGroundId = 0
   self.timerEnableSeedBag1:Start()
   self.timerEnableSeedBag2:Start()
 end
 
-function EasyPlant:OnChangeWorld()
+function HappyGardner:OnChangeWorld()
   if (self.eventsActive == false) then
-    self:ToggleEvents(true)
+    self:ToggleEventHandlers(true)
   end
 end
 
-function EasyPlant:OnSubZoneChanged(nZoneId, pszZoneName)
+function HappyGardner:OnSubZoneChanged(nZoneId, pszZoneName)
 
   -- Print("nZoneId: " .. tostring(nZoneId) .. "; self.nLastZoneId: " .. self.nLastZoneId)
 
@@ -247,49 +240,48 @@ function EasyPlant:OnSubZoneChanged(nZoneId, pszZoneName)
 
   if (nZoneId == N_HOUSE_PLOT_ID and self.nLastZoneId ~= N_HOUSE_PLOT_ID) then
     if (not self.eventsActive) then
-      self:ToggleEvents(true)
+      self:ToggleEventHandlers(true)
     end
     self.timerDisplaySeedBag:Start()
 
   elseif (nZoneId ~= N_HOUSE_PLOT_ID) then
 
-    self.tExistingFertileGrounds = {}
-    self:ToggleEvents(false)
+    self.tKnownFertileGround = {}
+    self:ToggleEventHandlers(false)
     self.timerDisplaySeedBag:Stop()
   end
   self.nLastZoneId = nZoneId
 end
 
-function EasyPlant:OnUpdateInventory()
+function HappyGardner:OnUpdateInventory()
   --Print("updateinv")
-  if (self.nToPlantFertileGroundId == 0) then
-    local nToPlantFertileGroundId = self:GetToPlantUnitId()
-    if (nToPlantFertileGroundId > 0) then
-      self.nToPlantFertileGroundId = nToPlantFertileGroundId
+  if (self.nValidFertileGroundId == 0) then
+    local nValidFertileGroundId = self:GetValidFertileGroundUnitId()
+    if (nValidFertileGroundId > 0) then
+      self.nValidFertileGroundId = nValidFertileGroundId
     end
   end
 
-  if (self.nToPlantFertileGroundId and self.nToPlantFertileGroundId > 0) then
-    self:OnShowHappyGardener(true)
+  if (self.nValidFertileGroundId and self.nValidFertileGroundId > 0) then
+    self:OnHappyGardner(true)
   end
 end
 
-function EasyPlant:IsFertileGround(strName)
+function HappyGardner:IsFertileGround(strName)
 
   return strName == Apollo.GetString(N_FERTILE_GROUND_STRING_ID) -- or strName == Apollo.GetString(N_FERTILE_GROUND_UNKNOWN_STRING_ID)
 end
 
 
-function EasyPlant:OnUnitCreated(unit)
+function HappyGardner:OnUnitCreated(unit)
 
-  if ((unit) and (self:IsFertileGround(unit:GetName())) and (unit:GetType() == STR_FERTILE_GROUND_TYPE) and (self.tExistingFertileGrounds[unit:GetId()] == nil)) then
-    --Print("watching")
-    self.tExistingFertileGrounds[unit:GetId()] = {}
-    self.tExistingFertileGrounds[unit:GetId()][STR_FERTILE_GROUND_TABLE_UNIT] = unit
+  if ((unit) and (self:IsFertileGround(unit:GetName())) and (unit:GetType() == STR_FERTILE_GROUND_TYPE) and (self.tKnownFertileGround[unit:GetId()] == nil)) then
+    self.tKnownFertileGround[unit:GetId()] = {}
+    self.tKnownFertileGround[unit:GetId()][STR_FERTILE_GROUND_TABLE_UNIT] = unit
   end
 end
 
-function EasyPlant:DistanceToUnit(unit)
+function HappyGardner:DistanceToUnit(unit)
 
   local unitPlayer = GameLib.GetPlayerUnit()
 
@@ -314,49 +306,47 @@ function EasyPlant:DistanceToUnit(unit)
   end
 end
 
-function EasyPlant:GetToPlantUnitId()
-  local nDistanceToFertileGround, nCurtime
+function HappyGardner:GetValidFertileGroundUnitId()
+  local nCurrentTime, nDistanceFromFertileGround, unitFertileGround, nFertileGroundTime = GameLib.GetGameTime()
 
-  -- Print("tExistingFertileGrounds: " .. table.tostring(self.tExistingFertileGrounds))
+  for nFertileGroundUnitId, tFertileGroundInfo in pairs(self.tKnownFertileGround) do
+    unitFertileGround = tFertileGroundInfo[STR_FERTILE_GROUND_TABLE_UNIT]
+    nFertileGroundTime = tFertileGroundInfo[STR_FERTILE_GROUND_TABLE_TIME]
+    nDistanceFromFertileGround = self:DistanceToUnit(unitFertileGround)
 
-  for i, tCurrentUnitInfo in pairs(self.tExistingFertileGrounds) do
-    nDistanceToFertileGround = self:DistanceToUnit(tCurrentUnitInfo[STR_FERTILE_GROUND_TABLE_UNIT])
-    nCurtime = GameLib.GetGameTime()
-
-    -- Print ("distance: " .. distance .. "; curunit[STR_FERTILE_GROUND_TABLE_TIME]: " .. tostring(curunit[STR_FERTILE_GROUND_TABLE_TIME]) .. "; " .. tostring(self:IsFertileGround(curunit[STR_FERTILE_GROUND_TABLE_UNIT]:GetName())))
-    if (nDistanceToFertileGround < N_FERTILE_GROUND_MAX_DISTANCE and (tCurrentUnitInfo[STR_FERTILE_GROUND_TABLE_TIME] == nil or nCurtime - tCurrentUnitInfo[STR_FERTILE_GROUND_TABLE_TIME] > 1) and self:IsFertileGround(tCurrentUnitInfo[STR_FERTILE_GROUND_TABLE_UNIT]:GetName())) then
-      return i
+    if (nDistanceFromFertileGround < N_FERTILE_GROUND_MAX_DISTANCE and (not nFertileGroundTime or nCurrentTime - nFertileGroundTime > 1) and self:IsFertileGround(unitFertileGround:GetName())) then
+      return nFertileGroundUnitId
     end
   end
   return 0
 end
 
-function EasyPlant:OnDisplaySeedBagTimer()
+function HappyGardner:OnDisplaySeedBagTimer()
 
   if (not GameLib.GetPlayerUnit()) then return end
 
-  local nToPlantUnitId = self:GetToPlantUnitId()
+  local nFertileGroundUnitId = self:GetValidFertileGroundUnitId()
 
-  if (nToPlantUnitId > 0) then
-    self.nToPlantFertileGroundId = nToPlantUnitId
-    self:OnShowHappyGardener(false)
-  else
+  if (nFertileGroundUnitId > 0) then
+    self.nValidFertileGroundId = nFertileGroundUnitId
+    self:OnHappyGardner(false)
+  elseif (self.wndMain:IsVisible()) then
     self:CloseSeedBagWindow()
   end
 end
 
 
 -----------------------------------------------------------------------------------------------
--- EasyPlant Functions
+-- HappyGardner Functions
 -----------------------------------------------------------------------------------------------
 -- Define general functions here
 
 
 -----------------------------------------------------------------------------------------------
--- EasyPlantForm Functions
+-- HappyGardnerForm Functions
 -----------------------------------------------------------------------------------------------
 -- when the OK button is clicked
-function EasyPlant:OnGenerateTooltip(wndControl, wndHandler, tType, item)
+function HappyGardner:OnGenerateTooltip(wndControl, wndHandler, tType, item)
 
   if wndControl ~= wndHandler then return end
   wndControl:SetTooltipDoc(nil)
@@ -366,18 +356,18 @@ function EasyPlant:OnGenerateTooltip(wndControl, wndHandler, tType, item)
   end
 end
 
-function EasyPlant:TempClose(wndHandler, wndControl, eMouseButton, nLastRelativeMouseX, nLastRelativeMouseY, bDoubleClick, bStopPropagation)
-  self.timerDisplaySeedBag:Stop()
-  self:ToggleEvents(false)
-  self.nLastZoneId = 0
-  self:CloseSeedBagWindow()
+function HappyGardner:TempClose(wndHandler, wndControl, eMouseButton, nLastRelativeMouseX, nLastRelativeMouseY, bDoubleClick, bStopPropagation)
+    self.timerDisplaySeedBag:Stop()
+    self:ToggleEventHandlers(false)
+    self.nLastZoneId = 0
+    self:CloseSeedBagWindow()
 end
 
 -----------------------------------------------------------------------------------------------
--- EasyPlant Instance
+-- HappyGardner Instance
 -----------------------------------------------------------------------------------------------
-local EasyPlantInst = EasyPlant:new()
-EasyPlantInst:Init()
+local HappyGardnerInst = HappyGardner:new()
+HappyGardnerInst:Init()
 
 
 function table.val_to_str(v)
