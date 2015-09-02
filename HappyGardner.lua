@@ -56,7 +56,7 @@ local fnSortSeedsFirst = function(itemLeft, itemRight)
 end
 
 
-function HappyGardner:Events(activate)
+function HappyGardner:ToggleEventHandlers(activate)
   if (activate == true) then
     Apollo.RegisterEventHandler("UnitCreated", "OnUnitCreated", self)
     Apollo.RegisterEventHandler("UpdateInventory", "OnUpdateInventory", self)
@@ -76,7 +76,7 @@ function HappyGardner:OnLoad()
 
   Apollo.RegisterEventHandler("SubZoneChanged", "OnSubZoneChanged", self)
   Apollo.RegisterEventHandler("ChangeWorld", "OnChangeWorld", self)
-  self:Events(true)
+  self:ToggleEventHandlers(true)
 
   self.xmlDoc = XmlDoc.CreateFromFile("HappyGardner.xml")
   self.xmlDoc:RegisterCallback("OnDocLoaded", self)
@@ -96,17 +96,12 @@ function HappyGardner:OnDocLoaded()
     Apollo.RegisterEventHandler("WindowManagementReady", "OnWindowManagementReady", self)
     self.wndMain:Show(false, true)
 
-    -- local x, y = Apollo.GetScreenSize()
-    -- self.wndMain:SetAnchorOffsets((x / 2), (y / 2) - 45, (x / 2), (y / 2))
-    -- if the xmlDoc is no longer needed, you should set it to nil
-    -- self.xmlDoc = nil
     self.nLastZoneId = 0
     self.unit = 0
     self.toplant = 0
     self.wndSeedBag = self.wndMain:FindChild("MainBagWindow")
 
-    Apollo.RegisterSlashCommand("ep", "OnEp", self)
-    Apollo.RegisterSlashCommand("ep2", "OnEp2", self)
+    Apollo.RegisterSlashCommand("hg", "OnHappyGardner", self)
 
     self.wndSeedBag:SetSort(true)
     self.wndSeedBag:SetItemSortComparer(fnSortSeedsFirst)
@@ -115,12 +110,10 @@ function HappyGardner:OnDocLoaded()
     self.wndSeedBag:SetStyle("IgnoreMouse", false)
     self.timerDisplaySeedBag = ApolloTimer.Create(1.000, true, "OnDisplaySeedBagTimer", self)
     self.timerEnableSeedBag = ApolloTimer.Create(0.4, false, "OnEnableSeedBagTimer", self)
-    -- self.BlockTimerStart = ApolloTimer.Create(0.1, false, "OnBlockTimer", self)
   end
 end
 
 function HappyGardner:OnEnableSeedBagTimer()
-  -- self.wndSeedBag:Enable(not self.wndSeedBag:IsEnabled())
   self.wndSeedBag:SetStyle("IgnoreMouse", false)
 end
 
@@ -130,14 +123,6 @@ function HappyGardner:OnWindowManagementReady()
   if (self.nLastZoneId == 0) then
     self:OnSubZoneChanged(GameLib.GetCurrentZoneId())
   end
-end
-
-
-
-function HappyGardner:OnEp2()
-  --Print(tostring(self.eventsActive))
-  Print(self.nLastZoneId)
-  Print(tostring(self.eventsActive))
 end
 
 -----------------------------------------------------------------------------------------------
@@ -171,15 +156,15 @@ end
 -----------------------------------------------------------------------------------------------
 -- HappyGardner OnLoad
 -----------------------------------------------------------------------------------------------
-function HappyGardner:OnEp(override)
+function HappyGardner:OnHappyGardner(bForceUpdate)
 
-  if (self.wndMain:IsVisible() and override == false) then
+  if (self.wndMain:IsVisible() and not bForceUpdate) then
     return
   end
 
   local nSeedCount = 0
   local tInventoryItems = GameLib.GetPlayerUnit():GetInventoryItems()
-  for i, itemInventory in ipairs(tInventoryItems) do
+  for _, itemInventory in ipairs(tInventoryItems) do
     if itemInventory then
       local item = itemInventory.itemInBag
       if (item:GetItemType() == N_SEED_ITEM_TYPE) then
@@ -197,43 +182,35 @@ function HappyGardner:OnEp(override)
     self.wndMain:Show(true, true)
   end
 
-  local bagwindow = self.wndMain:FindChild("MainBagWindow")
-  --Print("repainting")
-  local multi = 47
+  local wndBag = self.wndMain:FindChild("MainBagWindow")
 
-  local nLeft, nTop, nRight, nBottom = self.wndMain:GetAnchorOffsets()
+  local nLeft, nTop, _, nBottom = self.wndMain:GetAnchorOffsets()
   self.wndMain:SetAnchorOffsets(nLeft, nTop, (nLeft) + (nSeedCount * N_BAG_WINDOWS_SQUARE_SIZE + N_BAG_WINDOWS_SQUARE_SIZE), nBottom)
 
-  bagwindow:SetSquareSize(N_BAG_SQUARE_SIZE, N_BAG_SQUARE_SIZE)
-  bagwindow:SetBoxesPerRow(nSeedCount)
+  wndBag:SetSquareSize(N_BAG_SQUARE_SIZE, N_BAG_SQUARE_SIZE)
+  wndBag:SetBoxesPerRow(nSeedCount)
 end
 
 function HappyGardner:OnMouseButtonDown()
 
-  --[[
-  if (not self.wndSeedBag:IsEnabled()) then
-    return
-  end
-  ]]
-
   local unitTarget = GameLib.GetTargetUnit()
   if unitTarget and self:IsFertileGround(unitTarget:GetName()) then
-    self.nToPlantFertileGroundId = unitTarget:GetId()
+    self.nValidFertileGroundId = unitTarget:GetId()
   end
 
-  if (self.nToPlantFertileGroundId == 0) then
+  if (self.nValidFertileGroundId == 0) then
 
-    local nFertileGroundId = self:GetToPlantUnitId()
+    local nFertileGroundId = self:GetValidFertileGroundUnitId()
     if (nFertileGroundId > 0) then
-      self.nToPlantFertileGroundId = nFertileGroundId
+      self.nValidFertileGroundId = nFertileGroundId
     else
       return
     end
   end
-  --Print(self.nToPlantFertileGroundId)
-  self.watching[self.nToPlantFertileGroundId][STR_FERTILE_GROUND_TABLE_TIME] = GameLib.GetGameTime()
-  GameLib.SetTargetUnit(self.watching[self.nToPlantFertileGroundId][STR_FERTILE_GROUND_TABLE_UNIT])
-  self.nToPlantFertileGroundId = 0
+  --Print(self.nValidFertileGroundId)
+  self.tKnownFertileGround[self.nValidFertileGroundId][STR_FERTILE_GROUND_TABLE_TIME] = GameLib.GetGameTime()
+  GameLib.SetTargetUnit(self.tKnownFertileGround[self.nValidFertileGroundId][STR_FERTILE_GROUND_TABLE_UNIT])
+  self.nValidFertileGroundId = 0
 
   self.wndSeedBag:SetStyle("IgnoreMouse", true)
   self.timerEnableSeedBag:Start()
@@ -241,7 +218,7 @@ end
 
 function HappyGardner:OnChangeWorld()
   if (self.eventsActive == false) then
-    self:Events(true)
+    self:ToggleEventHandlers(true)
   end
 end
 
@@ -255,14 +232,14 @@ function HappyGardner:OnSubZoneChanged(nZoneId, pszZoneName)
 
   if (nZoneId == N_HOUSE_PLOT_ID and self.nLastZoneId ~= N_HOUSE_PLOT_ID) then
     if (not self.eventsActive) then
-      self:Events(true)
+      self:ToggleEventHandlers(true)
     end
     self.timerDisplaySeedBag:Start()
 
   elseif (nZoneId ~= N_HOUSE_PLOT_ID) then
 
-    self.watching = {}
-    self:Events(false)
+    self.tKnownFertileGround = {}
+    self:ToggleEventHandlers(false)
     self.timerDisplaySeedBag:Stop()
   end
   self.nLastZoneId = nZoneId
@@ -271,16 +248,15 @@ end
 
 function HappyGardner:OnUpdateInventory()
   --Print("updateinv")
-  if (self.nToPlantFertileGroundId == 0) then
-    local nToPlantFertileGroundId = self:GetToPlantUnitId()
-    if (nToPlantFertileGroundId > 0) then
-      self.nToPlantFertileGroundId = nToPlantFertileGroundId
+  if (self.nValidFertileGroundId == 0) then
+    local nValidFertileGroundId = self:GetValidFertileGroundUnitId()
+    if (nValidFertileGroundId > 0) then
+      self.nValidFertileGroundId = nValidFertileGroundId
     end
   end
 
-  if (self.nToPlantFertileGroundId and self.nToPlantFertileGroundId > 0) then
-    --Print("execute")
-    self:OnEp(true)
+  if (self.nValidFertileGroundId and self.nValidFertileGroundId > 0) then
+    self:OnHappyGardner(true)
   end
 end
 
@@ -292,22 +268,11 @@ end
 
 function HappyGardner:OnUnitCreated(unit)
 
-  if ((unit) and (self:IsFertileGround(unit:GetName())) and (unit:GetType() == STR_FERTILE_GROUND_TYPE) and (self.watching[unit:GetId()] == nil)) then
-    --Print("watching")
-    self.watching[unit:GetId()] = {}
-    self.watching[unit:GetId()][STR_FERTILE_GROUND_TABLE_UNIT] = unit
+  if ((unit) and (self:IsFertileGround(unit:GetName())) and (unit:GetType() == STR_FERTILE_GROUND_TYPE) and (self.tKnownFertileGround[unit:GetId()] == nil)) then
+    self.tKnownFertileGround[unit:GetId()] = {}
+    self.tKnownFertileGround[unit:GetId()][STR_FERTILE_GROUND_TABLE_UNIT] = unit
   end
 end
-
-
---[[
-function HappyGardner:OnUnitDestroyed(unit)
-  if ((unit) and (self.watching[unit:GetId()])) then
-    self.watching[unit:GetId()] = nil
-  end
-end
-]]
-
 
 function HappyGardner:DistanceToUnit(unit)
 
@@ -334,16 +299,16 @@ function HappyGardner:DistanceToUnit(unit)
   end
 end
 
-function HappyGardner:GetToPlantUnitId()
-  local distance, curtime
+function HappyGardner:GetValidFertileGroundUnitId()
+  local nCurrentTime, nDistanceFromFertileGround, unitFertileGround, nFertileGroundTime = GameLib.GetGameTime()
 
-  for i, curunit in pairs(self.watching) do
-    distance = self:DistanceToUnit(curunit[STR_FERTILE_GROUND_TABLE_UNIT])
-    curtime = GameLib.GetGameTime()
+  for nFertileGroundUnitId, tFertileGroundInfo in pairs(self.tKnownFertileGround) do
+    unitFertileGround = tFertileGroundInfo[STR_FERTILE_GROUND_TABLE_UNIT]
+    nFertileGroundTime = tFertileGroundInfo[STR_FERTILE_GROUND_TABLE_TIME]
+    nDistanceFromFertileGround = self:DistanceToUnit(unitFertileGround)
 
-    -- Print ("distance: " .. distance .. "; curunit[STR_FERTILE_GROUND_TABLE_TIME]: " .. tostring(curunit[STR_FERTILE_GROUND_TABLE_TIME]) .. "; " .. tostring(self:IsFertileGround(curunit[STR_FERTILE_GROUND_TABLE_UNIT]:GetName())))
-    if (distance < N_FERTILE_GROUND_MAX_DISTANCE and (curunit[STR_FERTILE_GROUND_TABLE_TIME] == nil or curtime - curunit[STR_FERTILE_GROUND_TABLE_TIME] > 1) and self:IsFertileGround(curunit[STR_FERTILE_GROUND_TABLE_UNIT]:GetName())) then
-      return i
+    if (nDistanceFromFertileGround < N_FERTILE_GROUND_MAX_DISTANCE and (not nFertileGroundTime or nCurrentTime - nFertileGroundTime > 1) and self:IsFertileGround(unitFertileGround:GetName())) then
+      return nFertileGroundUnitId
     end
   end
   return 0
@@ -353,18 +318,14 @@ function HappyGardner:OnDisplaySeedBagTimer()
 
   if (not GameLib.GetPlayerUnit()) then return end
 
-  local toplant = self:GetToPlantUnitId()
+  local nFertileGroundUnitId = self:GetValidFertileGroundUnitId()
 
-  -- Print("OnDisplaySeedBagTimer: " .. toplant)
-
-  if (toplant > 0) then
-    self.nToPlantFertileGroundId = toplant
-    self:OnEp(false)
-  else
+  if (nFertileGroundUnitId > 0) then
+    self.nValidFertileGroundId = nFertileGroundUnitId
+    self:OnHappyGardner(false)
+  elseif (self.wndMain:IsVisible()) then
     self.wndMain:Close()
   end
-
-  --Print("timer")
 end
 
 
@@ -391,7 +352,7 @@ end
 
 function HappyGardner:TempClose(wndHandler, wndControl, eMouseButton, nLastRelativeMouseX, nLastRelativeMouseY, bDoubleClick, bStopPropagation)
     self.timerDisplaySeedBag:Stop()
-    self:Events(false)
+    self:ToggleEventHandlers(false)
     self.nLastZoneId = 0
     self.wndMain:Close()
 end
