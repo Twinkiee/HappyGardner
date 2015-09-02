@@ -55,7 +55,7 @@ local fnSortSeedsFirst = function(itemLeft, itemRight)
   return 0
 end
 
-function EasyPlant:CloseSeedBagWindow()
+function HappyGardner:CloseSeedBagWindow()
   self.wndMain:Close()
   self.nToPlantFertileGroundId = 0
 end
@@ -74,7 +74,7 @@ end
 
 function HappyGardner:OnLoad()
 
-  self.tExistingFertileGrounds = {}
+  self.tKnownFertileGround = {}
   self.arPreloadUnits = {}
 
   Apollo.RegisterEventHandler("SubZoneChanged", "OnSubZoneChanged", self)
@@ -225,7 +225,7 @@ function HappyGardner:OnMouseButtonDown()
 end
 
 function HappyGardner:OnChangeWorld()
-  if (self.eventsActive == false) then
+  if (not self.eventsActive) then
     self:ToggleEventHandlers(true)
   end
 end
@@ -254,7 +254,7 @@ function HappyGardner:OnSubZoneChanged(nZoneId, pszZoneName)
 end
 
 function HappyGardner:OnUpdateInventory()
-  --Print("updateinv")
+
   if (self.nValidFertileGroundId == 0) then
     local nValidFertileGroundId = self:GetValidFertileGroundUnitId()
     if (nValidFertileGroundId > 0) then
