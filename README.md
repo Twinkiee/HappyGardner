@@ -1,5 +1,5 @@
 # HappyGardner
-HappyGardner is a WildStar addon which allows you to easily plant your seeds when you're close enough to a fertile ground.
+HappyGardner is a WildStar addon which allows you to easily plant your seeds when there's a valid houseplot fertile ground nearby.
 
 Original idea and credits go to http://www.curse.com/users/Dorwido
 
