@@ -123,7 +123,9 @@ function HappyGardner:OnEnableSeedBagTimer()
 end
 
 function HappyGardner:OnWindowManagementReady()
+  Event_FireGenericEvent("WindowManagementRegister", { wnd = self.wndMain, strName = "HappyGardner" })
   Event_FireGenericEvent("WindowManagementAdd", { wnd = self.wndMain, strName = "HappyGardner" })
+
   if (self.nLastZoneId == 0) then
     self:OnSubZoneChanged(GameLib.GetCurrentZoneId())
   end
