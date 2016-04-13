@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Addon Author="Twinkie" APIVersion="11" Name="HappyGardner" Description="" Version="1.0.1">
+<Addon Author="Twinkie" APIVersion="12" Name="HappyGardner" Description="" Version="1.0.1">
     <Script Name="HappyGardner.lua"/>
     <Form Name="HappyGardner.xml"/>
 </Addon>

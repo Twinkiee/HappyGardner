@@ -167,8 +167,13 @@ function HappyGardner:OnHappyGardner(bForceUpdate)
     return
   end
 
+  local unitPlayer = GameLib.GetPlayerUnit()
+
+  if (not unitPlayer) then return end
+
   local nSeedCount = 0
-  local tInventoryItems = GameLib.GetPlayerUnit():GetInventoryItems()
+
+  local tInventoryItems = unitPlayer:GetInventoryItems()
   for _, itemInventory in ipairs(tInventoryItems) do
     if itemInventory then
       local item = itemInventory.itemInBag
